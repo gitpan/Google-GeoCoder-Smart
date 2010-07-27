@@ -9,6 +9,8 @@ automaticaly formatted for perl. I am planning to add a validate function to tel
 close the returned match is to the original address passed to the module. 
 If you find any bugs, please let me know. 
 
+Make sure you read the google maps api terms of service agreement before using this module.
+
 INSTALLATION
 
 To install this module type the following:

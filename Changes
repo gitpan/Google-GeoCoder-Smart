@@ -7,3 +7,7 @@ Revision history for Perl extension Google::GeoCoder::Smart.
 1.1  Tue Jul 27 10:20:30 2010
 	-update for the google v3 maps api
 		-A -n Google::GeoCoder::Smart
+
+1.11 Tue Jul 27 15:27:00 2010
+	-new updates for error detection and alerting
+		-A -n Google::GeoCoder::Smart

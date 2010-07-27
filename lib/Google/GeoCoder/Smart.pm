@@ -10,7 +10,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT = qw(new geocode parse);
 
-our $VERSION = 1.1;
+our $VERSION = 1.11;
 
 =head1 NAME
 
@@ -22,7 +22,7 @@ Smart - Google Maps Api HTTP geocoder
   
  $geo = Google::GeoCoder::Smart->new();
 
- my ($resultnum, @results) = $geo->geocode("address" => *your address here*);
+ my ($resultnum, $error, @results) = $geo->geocode("address" => *your address here*);
 
  foreach $result(@results) {
 
@@ -48,6 +48,14 @@ and its sub-dependencies. I wanted something that was adaptable and would return
 
 automaticaly formatted for perl. 
 
+#################################################
+
+MAKE SURE TO READ GOOGLE's TERMS OF USE
+
+they can be found at http://code.google.com/apis/maps/terms.html#section_10_12
+
+#################################################
+
 If you find any bugs, please let me know. 
 
 =head1 METHODS
@@ -64,11 +72,11 @@ the api key parameter is useful for the api premium service.
 
 the host paramater is only necessary if you use a different google host than google.com, 
 
-such as google.com.eu or something like that.
+such as google.com.eu or something like that.http://code.google.com/apis/maps/terms.html#section_10_12
 
 =head2 geocode
 
-	my ($num, @results) = $geo->geocode(
+	my ($num, $error, @results) = $geo->geocode(
 
 	"address" => "address *or street number and name* here", 
 
@@ -93,6 +101,22 @@ However, it also supports breaking it down into parts.
 Once I implement a validation function, breaking it down into parts will be the
 
 best thing to do if you wish to validate the results brought back.
+
+####################################
+
+New Update to the geocode function.
+
+In the older versions of this module, I had it die if google returned an error.
+
+This version sends back the error as a scalar value. 
+
+It will return one of the following error messages if an error is encountered
+
+	connection  #something went wrong with the download
+
+	limit       #the google query limit has been exceeded. Try again 24 hours from when you started geocoding
+
+	no_result   #no results were found for the address entered
 
 =head2 parse
 
@@ -190,19 +214,19 @@ undef $err;
 
 if($content =~ m/ZERO_RESULTS/) {
 
-die "No Results Found for $addr $CITY $STATE $ZIP\n";
+$error = "no_result";
 
 };
 
 if($content =~ m/OVER_QUERY_LIMIT/) {
 
-die "ERROR: you have exceeded your google query limit\n";
+$error = "limit";
 
 };
 
 unless(defined $content) {
 
-die "Connection Error!\n";
+$error = "connection";
 
 };
 
@@ -212,7 +236,7 @@ pop @results;
 
 my $length = @results;
 
-return $length, @results;
+return $length, $error, @results;
 
 }
 
