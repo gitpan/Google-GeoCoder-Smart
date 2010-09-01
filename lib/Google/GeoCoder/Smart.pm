@@ -10,7 +10,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT = qw(new geocode parse);
 
-our $VERSION = 1.11;
+our $VERSION = 1.12;
 
 =head1 NAME
 
@@ -211,6 +211,8 @@ $ZIP = delete $params{'zip'};
 my $content = get("http://$self->{host}/maps/api/geocode/xml?address=$addr $CITY $STATE $ZIP&sensor=false");
 
 undef $err;
+
+undef $error;
 
 if($content =~ m/ZERO_RESULTS/) {
 

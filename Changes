@@ -11,3 +11,6 @@ Revision history for Perl extension Google::GeoCoder::Smart.
 1.11 Tue Jul 27 15:27:00 2010
 	-new updates for error detection and alerting
 		-A -n Google::GeoCoder::Smart
+1.12 Wed Sep 1 14:45:00 2010
+	-small fix for some bugs
+		-A -n Google::GeoCoder::Smart
