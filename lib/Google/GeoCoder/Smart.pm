@@ -6,11 +6,13 @@ require Exporter;
 
 use LWP::Simple qw(!head);
 
+use JSON;
+
 our @ISA = qw(Exporter);
 
 our @EXPORT = qw(new geocode parse);
 
-our $VERSION = 1.12;
+our $VERSION = 1.13;
 
 =head1 NAME
 
@@ -22,15 +24,15 @@ Smart - Google Maps Api HTTP geocoder
   
  $geo = Google::GeoCoder::Smart->new();
 
- my ($resultnum, $error, @results) = $geo->geocode("address" => *your address here*);
+ my ($resultnum, $error, @results, $returncontent) = $geo->geocode("address" => *your address here*);
 
- foreach $result(@results) {
+ $resultnum--;
 
- my (%params) = $geo->parse($result);
+ for $num(0 .. $resultnum) {
 
- $lat = $params{'lat'};
+ $lat = $results[$num]{geometry}{location}{lat};
 
- $lon = $params{'lon'};
+ $lng = $results[$num]{geometry}{location}{lng};
 
  };
 
@@ -40,13 +42,11 @@ This module provides a simple and "Smart" interface to the Google Maps geocoding
 
 It is compatible with the google maps http geocoder v3.
 
-It is based on the current format of the xml returned by the API. If Google changes their format, 
+the XML parsing is based on the current format of the xml returned by the API. 
 
-this module might stop working. The only dependency that this module has is the LWP::Simple module, 
+If Google changes their format, it might stop working. 
 
-and its sub-dependencies. I wanted something that was adaptable and would return results 
-
-automaticaly formatted for perl. 
+This module only depends on LWP::Simple and JSON. 
 
 #################################################
 
@@ -62,11 +62,15 @@ If you find any bugs, please let me know.
 
 =head2 new
 
-	$geo = Google::GeoCoder::Smart->new("key" => "your api key here", "host" => "host here");
+	$geo = Google::GeoCoder::Smart->new("method" => "json", "key" => "your api key here", "host" => "host here");
 
 the new function normally is called with no parameters.
 
-however, If you would like to, you can pass it your Google Maps api key and a host name.
+however, If you would like to, you can pass it your result format, Google Maps api key and a host name.
+
+the default result format is json. However, if you wish to use my own homemade XML parsing,
+
+or if you want the whole xml file for other purposes, you can specify xml in the "method" argument. 
 
 the api key parameter is useful for the api premium service.
 
@@ -76,7 +80,7 @@ such as google.com.eu or something like that.http://code.google.com/apis/maps/te
 
 =head2 geocode
 
-	my ($num, $error, @results) = $geo->geocode(
+	my ($num, $error, @results, $returntext) = $geo->geocode(
 
 	"address" => "address *or street number and name* here", 
 
@@ -94,35 +98,39 @@ the results in an array. This is the case because Google will sometimes return
 
 many different results for one address.
 
+It also returns the result text for debugging purposes.
+
 The geocode method will work if you pass the whole address as the "address" tag.
  
 However, it also supports breaking it down into parts.
 
-Once I implement a validation function, breaking it down into parts will be the
-
-best thing to do if you wish to validate the results brought back.
-
-####################################
-
-New Update to the geocode function.
-
-In the older versions of this module, I had it die if google returned an error.
-
-This version sends back the error as a scalar value. 
-
 It will return one of the following error messages if an error is encountered
 
-	connection  #something went wrong with the download
+	connection         #something went wrong with the download
 
-	limit       #the google query limit has been exceeded. Try again 24 hours from when you started geocoding
+	OVER_QUERY_LIMIT   #the google query limit has been exceeded. Try again 24 hours from when you started geocoding
 
-	no_result   #no results were found for the address entered
+	ZERO_RESULTS       #no results were found for the address entered
+
+If no errors were encountered it returns the value "OK"
+
+If you are using xml, you will have to run the parse method on each result in the array to bring back values from it. 
+
+If you use the json format, you can get the returned parameters easily through refferences. 
+
+	$lat = $results[0]{geometry}{location}{lat};
+
+	$lng = $results[0]{geometry}{location}{lng};
+
+When using the JSON method, it is helpful to know the format of the json returns of the api. 
+
+A good example can be found at http://www.google.com/maps/apis/geocode/json?address=1600+Amphitheatre+Parkway+Mountain+View,+CA+94043&sensor=false
 
 =head2 parse
 
 	%params = $geo->parse($result);
 
-parse takes any result text passed to it and parses it out into the corresponding values.
+Parse is only useful for the xml parameter. It takes any result text passed to it and parses it out into the corresponding values.
 
 It is how you get the lat and lon values for the result. 
 
@@ -192,7 +200,9 @@ my $host = delete $params{host} || "maps.google.com";
 
 my $key = delete $params{key};
 
-bless {"key" => $key, "host" => $host};
+$json = delete $params{method} || "json";
+
+bless {"key" => $key, "host" => $host, "method" => $json};
 
 }
 
@@ -208,7 +218,9 @@ $STATE = delete $params{'state'};
 
 $ZIP = delete $params{'zip'};
 
-my $content = get("http://$self->{host}/maps/api/geocode/xml?address=$addr $CITY $STATE $ZIP&sensor=false");
+
+
+my $content = get("http://$self->{host}/maps/api/geocode/$self->{method}?address=$addr $CITY $STATE $ZIP&sensor=false");
 
 undef $err;
 
@@ -216,13 +228,13 @@ undef $error;
 
 if($content =~ m/ZERO_RESULTS/) {
 
-$error = "no_result";
+$error = "ZERO_RESULTS";
 
 };
 
 if($content =~ m/OVER_QUERY_LIMIT/) {
 
-$error = "limit";
+$error = "OVER_QUERY_LIMIT";
 
 };
 
@@ -232,13 +244,52 @@ $error = "connection";
 
 };
 
+unless(defined $error) {
+
+$error = "OK";
+
+};
+
+undef @results;
+
+
+if($self->{method} eq "xml") {
+
 @results = split /<\/result>/, $content;
 
 pop @results;
 
+};
+
+if($self->{method} eq "json") {
+
+$results_json  = decode_json $content;
+
+#$error = $results_json->{results}[0];
+
+#@results = \$results_json->{results};
+
+$error = $results_json->{status};
+
+foreach $res($results_json->{results}[0]) {
+
+@push = ($res);
+
+
+
+push @results, @push;
+
+
+};
+
+
+};
+
+
+
 my $length = @results;
 
-return $length, $error, @results;
+return $length, $error, @results, $content;
 
 }
 
