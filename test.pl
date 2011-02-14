@@ -1,6 +1,6 @@
- use Google::GeoCoder::Smart;
+use Google::GeoCoder::Smart;
   
- $geo = Google::GeoCoder::Smart->new("method"=> 'json');
+ $geo = Google::GeoCoder::Smart->new();
 
  my ($resultnum, $error, @results, $returncontent) = $geo->geocode("address" => "1600 Amphitheatre Parkway Mountain View, CA 94043");
 
