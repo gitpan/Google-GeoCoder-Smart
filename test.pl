@@ -1,37 +1,42 @@
-use Google::GeoCoder::Smart;
-
-use XML::Simple;
+ use Google::GeoCoder::Smart;
   
- $geo = Google::GeoCoder::Smart->new("method" => "xml");
+ $geo = Google::GeoCoder::Smart->new("method"=> 'json');
 
- my ($resultnum, $error, @results, $returnref) = $geo->geocode("address" => "1600+Amphitheatre+Parkway+Mountain+View,+CA+94043");
+ my ($resultnum, $error, @results, $returncontent) = $geo->geocode("address" => "1600 Amphitheatre Parkway Mountain View, CA 94043");
 
 
-$results = XMLin($returnref, ForceArray => [ "results" ]);
 
-$lat = $results[0]{geometry}{location}{lat};
 
-$lon = $results[0]{geometry}{location}{lng};
 
-if($lat) {
+ $lat = $results[0]{geometry}{location}{lat};
 
-if($lon) {
+ $lng = $results[0]{geometry}{location}{lng};
 
-print "You are good to go!\n";
 
-}
 
-else {
+if ($lat) { 
 
-print "oops.. didn't work...\n";
+if ($lng) { 
 
-};
+print "test successful!\n";
 
-}
+ } 
 
-else {
+else { 
 
-print "oops.. didn't work...\n";
+print "error no longitude\n"; 
 
-};
+}; 
 
+} 
+
+else { 
+
+print "error no latitude\n";
+
+ };  
+
+print "Google Returned Request Status: $error\n";
+
+
+#blame any bugs on the government and the Android phone I wrote this test.pl version from
