@@ -25,5 +25,4 @@ Revision history for Perl extension Google::GeoCoder::Smart.
 		-A -n Google::GeoCoder::Smart
 
 1.16 Wed May 23 17:30:00 2012
-	-fixed header export bug
-		-A -n Google::GeoCoder::Smart
+	-
