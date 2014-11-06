@@ -12,7 +12,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT = qw(geocode parse);
 
-our $VERSION = 1.16;
+our $VERSION = 1.17;
 
 =head1 NAME
 
@@ -72,7 +72,7 @@ however, If you would like to, you can pass it your Google Maps api key and a ho
 
 the api key parameter is useful for the api premium service.
 
-the host paramater is only necessary if you use a different google host than google.com, 
+the host paramater is only necessary if you use a different google host than googleapis.com, 
 
 such as google.com.eu or something like that.http://code.google.com/apis/maps/terms.html#section_10_12
 
@@ -120,7 +120,7 @@ You can get the returned parameters easily through refferences.
 
 It is helpful to know the format of the json returns of the api. 
 
-A good example can be found at http://www.google.com/maps/apis/geocode/json?address=1600+Amphitheatre+Parkway+Mountain+View,+CA+94043&sensor=false
+A good example can be found at http://www.googleapis.com/maps/apis/geocode/json?address=1600+Amphitheatre+Parkway+Mountain+View,+CA+94043&sensor=false
 
 =head1 AUTHOR
 
@@ -128,7 +128,7 @@ TTG, ttg@cpan.org
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2010 by TTG
+Copyright (C) 2014 by TTG
 
 This library is free software; you can redistribute it and/or modify
 
@@ -143,7 +143,7 @@ sub new {
 
 my ($junk, %params) = @_;
 
-my $host = delete $params{host} || "maps.google.com";
+my $host = delete $params{host} || "maps.googleapis.com";
 
 my $key = delete $params{key};
 
@@ -163,7 +163,13 @@ $STATE = delete $params{'state'};
 
 $ZIP = delete $params{'zip'};
 
+my $keyVar = "";
 
+if($self->{key}) {
+
+	$keyVar = "&key=$self->{key}";
+
+}
 
 my $content = get("http://$self->{host}/maps/api/geocode/json?address=$addr $CITY $STATE $ZIP&sensor=false");
 
